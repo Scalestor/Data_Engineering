@@ -1,0 +1,36 @@
+job_name: live_pegelonline_data
+description: "ETL job for Pegelonline live data"
+
+source:
+  endpoint_url: "https://pegelonline.wsv.de/webservices/rest-api/v2/stations.json?includeTimeseries=true"
+  dataset_name: "pegelonline_data"
+  filename: "stations.json"
+  auth_credential_key: null  # No authentication required for this endpoint
+  timeout: 30
+  max_retries: 3
+
+storage:
+  base_path: "volumes/raw"
+  partition: "pegelonline_data/live_pegel"  # Date partition (YYYY-MM-DD) is automatically added by runner
+
+destination:
+  # Databricks Unity Catalog destination (catalog, schema, volume from environment or runner args)
+  catalog: "odde"
+  schema: "raw"
+  volume: "http"
+  
+  # Partition strategy for uploaded files
+  # - none: No partitioning, file goes directly to the path (e.g., pegelonline_data/live_pegel/stations.json)
+  # - daily: Date partitioning YYYY-MM-DD (e.g., pegelonline_data/live_pegel/2026-05-10/stations.json)
+  # - timestamp: Timestamp partitioning YYYY/MM/DD/HHmmss (e.g., pegelonline_data/live_pegel/2026/05/10/142530/stations.json)
+  partition_strategy: "daily"
+  
+  # Data file path and upload strategy
+  # The partition_strategy is automatically applied before the filename
+  # Example with daily: "pegelonline_data/live_pegel/stations.json" becomes "pegelonline_data/live_pegel/2026-05-10/stations.json"
+  databricks_relative_path: "pegelonline_data/live_pegel/stations.json"
+  overwrite: true  # true to overwrite, false to fail if exists
+  
+  upload_logs_on_failure: true
+
+
